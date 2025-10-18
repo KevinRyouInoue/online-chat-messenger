@@ -25,7 +25,7 @@ class UDP_Chat_Client:
         self.sock.sendto(payload, (self.server_ip, self.server_port))
         ip, port = self.sock.getsockname()
         print()
-        print(f"[登録完了] 自分のアドレス: {ip}:{port}")
+        print(f"[Registration complete] My address: {ip}:{port}")
         print()
 
     def receive_messages(self):
@@ -38,7 +38,7 @@ class UDP_Chat_Client:
                 try:
                     text = data.decode("utf-8")
                     if text == "__ROOM_CLOSED__":
-                        print(f"\n[システム通知] ルーム'{self.room_name}'のホストが退出したため、チャットを終了します")
+                        print(f"\n[System notification] Chat ending because the host of room '{self.room_name}' has left")
                         self.running = False
                         self.sock.close()
                         os._exit(0)
@@ -53,7 +53,7 @@ class UDP_Chat_Client:
             except OSError as e:
                 if not self.running:
                     break
-                print(f"[受信エラー] {e}")
+                print(f"[Receive error] {e}")
                 break
 
     def send_loop(self):
@@ -64,22 +64,22 @@ class UDP_Chat_Client:
                 if not msg:
                     continue
                 if msg.lower() in ["exit", "quit", "q"]:
-                    print("チャットを終了します")
+                    print("Ending chat")
                     break
                 payload = build_udp_payload(self.room_name, self.token, msg)
                 if len(payload) > MAX_MESSAGE_SIZE:
-                    print("エラー: メッセージが4096バイトを超えています")
+                    print("Error: Message exceeds 4096 bytes")
                     continue
                 self.sock.sendto(payload, (self.server_ip, self.server_port))
         except KeyboardInterrupt:
-            print("\nチャットを終了します")
+            print("\nEnding chat")
         finally:
             self.stop()
 
     def start(self):
         self.register()
         threading.Thread(target=self.receive_messages, daemon=True).start()
-        print("=== チャット開始 === (Ctrl+C または exit/q で終了)")
+        print("=== Chat started === (Press Ctrl+C or type exit/q to quit)")
         self.send_loop()
 
     def stop(self):
@@ -88,9 +88,9 @@ class UDP_Chat_Client:
         try:
             payload = build_udp_payload(self.room_name, self.token, "__LEAVE__")
             self.sock.sendto(payload, (self.server_ip, self.server_port))
-            print("[退出通知] サーバーに退出メッセージを送りました")
+            print("[Leave notification] Sent leave message to server")
         except Exception as e:
-            print(f"[退出通知エラー] {e}")
+            print(f"[Leave notification error] {e}")
         self.running = False
         if self.sock:
             try:

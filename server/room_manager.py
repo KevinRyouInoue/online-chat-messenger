@@ -12,7 +12,7 @@ class RoomManager:
         # {token: {"username": name, "room_name": room, "is_host": bool, "address": (ip, port)}}
         self.tokens = {}
         
-        print("RoomManager初期化: キャッシュをクリアしました")
+        print("RoomManager initialized: Cache cleared")
 
     def generate_token(self):
         return "token_" + secrets.token_hex(16)
@@ -31,18 +31,18 @@ class RoomManager:
 
     def validate_token_and_address(self, token, room_name):
         if token not in self.tokens:
-            return False, "無効なトークンです"
+            return False, "Invalid token"
         
         if room_name not in self.rooms:
-            return False, "ルームが存在しません"
+            return False, "Room does not exist"
         
         if token not in self.rooms[room_name]["members"]:
-            return False, "トークンがこのルームのメンバーではありません"
+            return False, "Token is not a member of this room"
         
         if self.tokens[token]["room_name"] != room_name:
-            return False, "トークンが別のルームに属しています"
+            return False, "Token belongs to a different room"
         
-        return True, "有効なトークンです"
+        return True, "Valid token"
 
     def create_room(self, room_name, username, address):
         if self.room_exists(room_name):
@@ -73,7 +73,7 @@ class RoomManager:
         if existing_token:
             self.tokens[existing_token]["address"] = address
             username = username.strip('"')
-            print(f"既存ユーザー: {repr(username)} (アドレス更新: {address}, トークン: {existing_token})")
+            print(f"Existing user: {repr(username)} (Address updated: {address}, Token: {existing_token})")
             return True, existing_token
 
         token = self.generate_token()
@@ -100,11 +100,11 @@ class RoomManager:
             with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             
-            print(f"データを{filename}に保存しました")
+            print(f"Data saved to {filename}")
             return True
 
         except Exception as e:
-            print(f"保存エラー: {e}")
+            print(f"Save error: {e}")
             return False
 
     def load_from_json(self, filename="room_manager.json"):
@@ -115,18 +115,18 @@ class RoomManager:
             self.rooms = data.get('rooms', {})
             self.tokens = data.get('tokens', {})
 
-            print(f"データを{filename}から手動で読み込みました")
+            print(f"Data manually loaded from {filename}")
             if 'saved_at' in data:
-                print(f"保存日時: {data['saved_at']}")
+                print(f"Saved at: {data['saved_at']}")
             
-            print(f"読み込み結果: {len(self.rooms)}個のルーム, {len(self.tokens)}個のトークン")
+            print(f"Load result: {len(self.rooms)} rooms, {len(self.tokens)} tokens")
             return True
 
         except FileNotFoundError:
-            print(f"ファイル{filename}が見つかりません")
+            print(f"File {filename} not found")
             return False
         except Exception as e:
-            print(f"読み込みエラー: {e}")
+            print(f"Load error: {e}")
             return False
         
     def delete_room_if_host_left(self, room_name, token):
@@ -135,25 +135,25 @@ class RoomManager:
         token_info = tokens.get(token)
 
         if not token_info:
-            print(f"未知のトークン: {token}")
+            print(f"Unknown token: {token}")
             return None
         room_name = token_info["room_name"]
 
         if rooms.get(room_name, {}).get("host_token") == token:
             username = token_info['username'].strip('"')
-            print(f"ホスト{repr(username)}のため、ルーム'{room_name}'を削除します")
+            print(f"Deleting room '{room_name}' because host {repr(username)} is leaving")
             for member_token in rooms[room_name]["members"]:
                 if member_token in tokens:
                     del tokens[member_token]
             del rooms[room_name]
-            print(f"ルーム'{room_name}'全トークンを削除しました")
+            print(f"All tokens for room '{room_name}' have been deleted")
             return None
         else:
             username = token_info['username'].strip('"')
-            print(f"{repr(username)} がルーム'{room_name}'から退出します")
+            print(f"{repr(username)} is leaving room '{room_name}'")
             if token in rooms[room_name]["members"]:
                 rooms[room_name]["members"].remove(token)
             if token in tokens:
                 del tokens[token]
-            print(f"{repr(username)}のトークンとメンバー情報を削除しました")
+            print(f"Deleted token and member information for {repr(username)}")
             return None

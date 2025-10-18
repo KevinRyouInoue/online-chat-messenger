@@ -8,24 +8,24 @@ from udp_server import UDP_Chat_Server
 def main():
     room_manager = RoomManager()
 
-    host = input("ホスト名 (デフォルト: localhost): ").strip() or "localhost"
+    host = input("Host name (default: localhost): ").strip() or "localhost"
 
-    tcp_port_str = input("TCPポート番号 (デフォルト: 9090): ").strip()
+    tcp_port_str = input("TCP port number (default: 9090): ").strip()
     if tcp_port_str:
         try:
             tcp_port = int(tcp_port_str)
         except ValueError:
-            print("ポート番号が不正です。数値で入力してください。")
+            print("Invalid port number. Please enter a numeric value.")
             return
     else:
         tcp_port = 9090
 
-    udp_port_str = input("UDPポート番号 (デフォルト: 9091): ").strip()
+    udp_port_str = input("UDP port number (default: 9091): ").strip()
     if udp_port_str:
         try:
             udp_port = int(udp_port_str)
         except ValueError:
-            print("ポート番号が不正です。数値で入力してください。")
+            print("Invalid port number. Please enter a numeric value.")
             return
     else:
         udp_port = 9091
@@ -36,9 +36,9 @@ def main():
     tcp_server.bind()
     udp_server.bind()
 
-    print(f"[起動] TCPサーバーを {host}:{tcp_port} にバインドしました")
-    print(f"[起動] UDPサーバーを {host}:{udp_port} にバインドしました\n")
-    print("UDPチャットサーバーが起動しました。メッセージを待っています...")
+    print(f"[Started] TCP server bound to {host}:{tcp_port}")
+    print(f"[Started] UDP server bound to {host}:{udp_port}\n")
+    print("UDP chat server started. Waiting for messages...")
 
     tcp_thread = threading.Thread(target=tcp_server.start, daemon=False)
     udp_thread = threading.Thread(target=udp_server.start, daemon=False)
@@ -46,19 +46,19 @@ def main():
     tcp_thread.start()
     udp_thread.start()
 
-    print("Ctrl+Cで停止...")
+    print("Press Ctrl+C to stop...")
     print()
 
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\nCtrl+Cが検出されたので停止します")
+        print("\nCtrl+C detected, stopping")
         tcp_server.stop()
         udp_server.stop()
         tcp_thread.join()
         udp_thread.join()
-        print("サーバー停止完了")
+        print("Server stopped successfully")
 
 if __name__ == "__main__":
     main()

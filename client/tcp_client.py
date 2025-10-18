@@ -17,10 +17,10 @@ class TCP_Create_Join_Client:
         try:
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.connect((self.host, self.port))
-            print(f"TCP接続に成功しました")
+            print(f"TCP connection successful")
             return True
         except Exception as e:
-            print(f"サーバーに接続できません: {e}")
+            print(f"Cannot connect to server: {e}")
             return False
 
     def disconnect(self):
@@ -44,12 +44,12 @@ class TCP_Create_Join_Client:
 
             op_c, state_c, room_c, payload_c = TCRProtocol.receive_tcrp_message(self.client_socket)
             if state_c != STATE_COMPLIANCE:
-                print("準拠応答受信エラー")
+                print("Error receiving compliance response")
                 return False
 
             compliance_result = json.loads(payload_c)
             if not compliance_result.get("success", False):
-                print("操作失敗（サーバー応答）")
+                print("Operation failed (server response)")
                 return False
 
             op_f, state_f, room_f, payload_f = TCRProtocol.receive_tcrp_message(self.client_socket)
@@ -58,11 +58,11 @@ class TCP_Create_Join_Client:
                 self.token = complete_result.get("token")
                 return True
             else:
-                print("完了応答が受信できませんでした")
+                print("Could not receive completion response")
                 return False
 
         except Exception as e:
-            print(f"処理エラー: {e}")
+            print(f"Processing error: {e}")
             return False
 
     def get_token(self):

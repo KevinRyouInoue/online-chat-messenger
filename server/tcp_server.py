@@ -14,7 +14,7 @@ class TCP_Create_Join_Server:
         self.running = False
         self.room_manager = room_manager
         
-        print(f"TCPサーバー初期化: {host}:{tcp_port}")
+        print(f"TCP server initialized: {host}:{tcp_port}")
 
     def bind(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,32 +33,32 @@ class TCP_Create_Join_Server:
             except OSError:
                 break
             except Exception as e:
-                print(f"接続処理エラー: {e}")
+                print(f"Connection processing error: {e}")
 
     def _handle_client(self, client_socket, address):
         try:
             op, state, room_name, payload = TCRProtocol.receive_tcrp_message(client_socket)
 
             if state != STATE_REQUEST:
-                print(f"無効な状態コード: {state}")
+                print(f"Invalid state code: {state}")
                 return
 
             if op == OP_CREATE_ROOM:
                 success, token = self.room_manager.create_room(room_name, payload, address)
                 payload = payload.strip('"')
-                print(f"{'作成成功' if success else '既に存在'}: ルーム'{room_name}' (ユーザー: {repr(payload)}, Address: {address})")
+                print(f"{'Creation successful' if success else 'Already exists'}: Room '{room_name}' (User: {repr(payload)}, Address: {address})")
                 if success:
-                    print(f"  → 発行されたトークン: {token}")
+                    print(f"  → Issued token: {token}")
                     self.room_manager.save_to_json()
             elif op == OP_JOIN_ROOM:
                 success, token = self.room_manager.join_room(room_name, payload, address)
                 payload = payload.strip('"')
-                print(f"{'参加成功' if success else '参加失敗'}: ルーム'{room_name}'に{repr(payload)}入室 (Address: {address})")
+                print(f"{'Join successful' if success else 'Join failed'}: {repr(payload)} entering room '{room_name}' (Address: {address})")
                 if success:
-                    print(f"  → 発行されたトークン: {token}")
+                    print(f"  → Issued token: {token}")
                     self.room_manager.save_to_json()
             else:
-                print(f"その操作コードは使えません（コード: {op}）")
+                print(f"Cannot use that operation code (Code: {op})")
                 return
 
             compliance = TCRProtocol.build_response_compliance(room_name, op, int(success))
@@ -66,14 +66,14 @@ class TCP_Create_Join_Server:
             client_socket.sendall(compliance + complete)
 
         except Exception as e:
-            print(f"クライアント処理エラー: {e}")
+            print(f"Client processing error: {e}")
         finally:
             client_socket.close()
-            print(f"[TCP] 切断: {address}")
+            print(f"[TCP] Disconnected: {address}")
 
     def stop(self):
         self.running = False
         if self.socket:
             self.socket.close()
             self.socket = None
-            print("[停止] TCPサーバーを停止しました")
+            print("[Stopped] TCP server stopped")

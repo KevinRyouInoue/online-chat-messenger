@@ -26,19 +26,19 @@ class UDP_Chat_Server:
                 data, address = self.udp_sock.recvfrom(MAX_MESSAGE_SIZE)
                 if not data:
                     continue
-                print(f"[受信] UDPパケット: {address} サイズ={len(data)}")
+                print(f"[Received] UDP packet: {address} size={len(data)}")
                 self.handle_packet(data, address)
             except Exception as e:
                 if self.running:
-                    print(f"[受信エラー] {e}")
+                    print(f"[Receive error] {e}")
 
     def handle_packet(self, data: bytes, address: tuple):
         try:
             room_name, token, message = parse_udp_payload(data)
-            print(f"[受信処理] ルーム: {room_name}, トークン: {token[:8]}..., メッセージ: {message}")
+            print(f"[Processing received] Room: {room_name}, Token: {token[:8]}..., Message: {message}")
             self.process_message(room_name, token, message, address)
         except Exception as e:
-            print(f"[処理エラー] {e}")
+            print(f"[Processing error] {e}")
 
     def process_message(self, room_name: str, token: str, message: str, address: tuple):
         rooms = self.room_manager.rooms
@@ -48,9 +48,9 @@ class UDP_Chat_Server:
             if token in tokens:
                 tokens[token]["address"] = address
                 self.room_manager.save_to_json()
-                print(f"[登録] トークン{token[:8]}...にアドレス{address}を登録しました\n")
+                print(f"[Registered] Address {address} registered to token {token[:8]}...\n")
             else:
-                print(f"[登録拒否] 未知のトークン {token[:8]}...")
+                print(f"[Registration rejected] Unknown token {token[:8]}...")
             return
 
         if message == "__LEAVE__":
@@ -58,22 +58,22 @@ class UDP_Chat_Server:
                 is_host = (rooms[room_name].get("host_token") == token)
                 if is_host:
                     username = tokens[token]['username'].strip('"')
-                    print(f"[ホスト退出] {repr(username)} がルーム'{room_name}'から退出します")
+                    print(f"[Host leaving] {repr(username)} is leaving room '{room_name}'")
                     self.notify_room_closed(room_name, excluded_tokens=[token])
 
             self.room_manager.delete_room_if_host_left(room_name, token)
             self.room_manager.save_to_json()
-            print(f"[退出処理] {token[:8]}...")
+            print(f"[Leave processing] {token[:8]}...")
             print()
             return
 
         is_valid, reason = self.room_manager.validate_token_and_address(token, room_name)
         if not is_valid:
-            print(f"[バリデーション失敗] {reason}")
+            print(f"[Validation failed] {reason}")
             return
 
         if room_name not in rooms or token not in tokens:
-            print("[中継失敗] ルームまたはトークンが存在しません")
+            print("[Relay failed] Room or token does not exist")
             return
 
         sender = tokens[token]["username"]
@@ -94,10 +94,10 @@ class UDP_Chat_Server:
                 payload = build_udp_message(sender, message)
                 self.udp_sock.sendto(payload, addr)
                 username = tokens[token]['username'].strip('"')
-                print(f"[送信] {repr(username)} へ: {message}")
+                print(f"[Sent] To {repr(username)}: {message}")
             except Exception as e:
                 username = tokens[token]['username'].strip('"')
-                print(f"[送信エラー] {repr(username)}: {e}")
+                print(f"[Send error] {repr(username)}: {e}")
 
     def notify_room_closed(self, room_name, excluded_tokens=None):
         if excluded_tokens is None:
@@ -107,11 +107,11 @@ class UDP_Chat_Server:
         tokens = self.room_manager.tokens
 
         if room_name not in rooms:
-            print(f"[通知エラー] ルーム'{room_name}'が存在しません")
+            print(f"[Notification error] Room '{room_name}' does not exist")
             return
 
         members = rooms[room_name]["members"]
-        print(f"[ルーム終了通知] ルーム'{room_name}'の{len(members)}人のメンバーに通知を送信します")
+        print(f"[Room closed notification] Sending notification to {len(members)} members of room '{room_name}'")
 
         notification_count = 0
         for member_token in members:
@@ -119,13 +119,13 @@ class UDP_Chat_Server:
                 continue
 
             if member_token not in tokens:
-                print(f"[警告] トークン{member_token[:8]}... が見つかりません")
+                print(f"[Warning] Token {member_token[:8]}... not found")
                 continue
 
             addr = tokens[member_token].get("address")
             if not addr:
                 username = tokens[member_token]['username'].strip('"')
-                print(f"[警告] {repr(username)} のアドレスが未登録")
+                print(f"[Warning] Address not registered for {repr(username)}")
                 continue
 
             if isinstance(addr, list):
@@ -136,15 +136,15 @@ class UDP_Chat_Server:
                 self.udp_sock.sendto(system_message.encode('utf-8'), addr)
                 notification_count += 1
                 username = tokens[member_token]['username'].strip('"')
-                print(f"[通知] {repr(username)}({addr}) に終了通知を送信")
+                print(f"[Notification] Sent closing notification to {repr(username)}({addr})")
             except Exception as e:
                 username = tokens[member_token]['username'].strip('"')
-                print(f"[通知エラー] {repr(username)} ({addr}): {e}")
+                print(f"[Notification error] {repr(username)} ({addr}): {e}")
 
-        print(f"[通知完了] {notification_count}人に送信しました\n")
+        print(f"[Notification complete] Sent to {notification_count} members\n")
 
     def stop(self):
         self.running = False
         if self.udp_sock:
             self.udp_sock.close()
-            print("[停止] UDPサーバーを停止しました")
+            print("[Stopped] UDP server stopped")

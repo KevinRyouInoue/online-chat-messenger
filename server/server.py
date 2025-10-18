@@ -4,6 +4,7 @@ import time
 from room_manager import RoomManager
 from tcp_server import TCP_Create_Join_Server
 from udp_server import UDP_Chat_Server
+import socket
 
 def main():
     room_manager = RoomManager()
@@ -29,6 +30,23 @@ def main():
             return
     else:
         udp_port = 9091
+
+    # Validate/normalize host
+    try:
+        socket.getaddrinfo(host, None)
+    except Exception:
+        print(f"[Info] Host '{host}' could not be resolved. Using 127.0.0.1 instead.")
+        host = "127.0.0.1"
+
+    # Validate ports range (avoid extremely low/reserved ports or out-of-range)
+    def normalize_port(p: int, default_p: int) -> int:
+        if 1024 <= p <= 65535:
+            return p
+        print(f"[Info] Port {p} is out of recommended range (1024-65535). Using default {default_p}.")
+        return default_p
+
+    tcp_port = normalize_port(tcp_port, 9090)
+    udp_port = normalize_port(udp_port, 9091)
 
     tcp_server = TCP_Create_Join_Server(host, tcp_port, room_manager)
     udp_server = UDP_Chat_Server(host, udp_port, room_manager)

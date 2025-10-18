@@ -11,6 +11,7 @@ A real-time chat application built with Python using TCP for connection manageme
 - [Protocol Overview](#protocol-overview)
 - [Project Structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
+ - [Deep Dive: Technical Concepts](#deep-dive-technical-concepts)
 
 ## ✨ Features
 
@@ -327,3 +328,16 @@ Contributions, issues, and feature requests are welcome!
 ---
 
 **Enjoy chatting! 💬**
+
+## Deep Dive: Technical Concepts
+
+For an in-depth explanation of the Computer Science fundamentals behind this project (networking architecture, custom protocols, API contracts, threading model, data structures, security, and performance), see:
+
+- docs/TECHNICAL_README.md
+
+Highlights include:
+- Why TCP for control-plane and UDP for data-plane
+- TCRP/UCRP protocol formats and state machines
+- How tokens, rooms, and addresses are managed
+- Concurrency patterns on client and server
+- Error handling, validation, and persistence strategy

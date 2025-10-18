@@ -17,7 +17,13 @@ class UDP_Chat_Server:
 
     def bind(self):
         self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_sock.bind((self.host, self.udp_port))
+        try:
+            self.udp_sock.bind((self.host, self.udp_port))
+        except Exception as e:
+            fallback_host = '127.0.0.1' if self.host.lower() == 'localhost' or self.host.strip() == '' else '127.0.0.1'
+            print(f"[Warn] Failed to bind UDP to {self.host}:{self.udp_port} ({e}). Falling back to {fallback_host}:{self.udp_port}.")
+            self.host = fallback_host
+            self.udp_sock.bind((self.host, self.udp_port))
         self.running = True
 
     def start(self):

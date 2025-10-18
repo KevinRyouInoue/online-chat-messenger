@@ -19,7 +19,14 @@ class TCP_Create_Join_Server:
     def bind(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.host, self.tcp_port))
+        try:
+            self.socket.bind((self.host, self.tcp_port))
+        except Exception as e:
+            # Fallback for invalid/unknown hostnames
+            fallback_host = '127.0.0.1' if self.host.lower() == 'localhost' or self.host.strip() == '' else '127.0.0.1'
+            print(f"[Warn] Failed to bind to {self.host}:{self.tcp_port} ({e}). Falling back to {fallback_host}:{self.tcp_port}.")
+            self.host = fallback_host
+            self.socket.bind((self.host, self.tcp_port))
         self.socket.listen()
         self.running = True
 
@@ -27,7 +34,7 @@ class TCP_Create_Join_Server:
         while self.running:
             try:
                 client_socket, address = self.socket.accept()
-                print(f"[TCP] 接続: {address}")
+                print(f"[TCP] Connected: {address}")
                 thread = threading.Thread(target=self._handle_client, args=(client_socket, address), daemon=True)
                 thread.start()
             except OSError:

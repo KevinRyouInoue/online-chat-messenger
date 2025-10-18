@@ -1,0 +1,8 @@
+# ===== Python =====
+__pycache__/
+
+# ===== macOS =====
+.DS_Store
+
+# ===== json =====
+room_manager.json
